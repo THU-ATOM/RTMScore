@@ -1,0 +1,39 @@
+# RTMScore 核心依赖 - pip 安装版本
+# Python 3.8 + CUDA 11.1
+
+--extra-index-url https://download.pytorch.org/whl/cu111
+--find-links https://data.dgl.ai/wheels/repo.html
+
+# 核心科学计算库
+numpy==1.20.3
+scipy==1.6.2
+pandas==1.0.3
+
+# 构建依赖（必须先安装）
+Cython>=0.29.0,<3.0
+setuptools<65.0
+
+# PyTorch（CUDA 11.1）- RTMScore 不需要 torchvision
+torch==1.9.0+cu111
+
+# DGL（CUDA 11.1）
+dgl-cu111==0.7.0
+
+# PyTorch 几何库（需要 torch 和 Cython）
+torch-scatter==2.0.9
+torch-sparse==0.6.12
+torch-cluster==1.5.9
+
+# 化学信息学
+rdkit-pypi==2021.3.5.1
+
+# 生物信息学
+biopandas==0.2.7
+MDAnalysis==2.0.0
+ProDy==2.1.0
+
+# 机器学习和可视化
+scikit-learn==0.24.2
+joblib==1.0.1
+matplotlib==3.4.3
+seaborn==0.11.2
