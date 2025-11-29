@@ -80,25 +80,36 @@ def prepare_ligand_file(actives_path, decoys_path, output_path):
     
     Returns:
         labels: 标签列表 (1 for active, 0 for decoy)
+        valid_indices: 有效分子的索引列表
     """
     labels = []
     all_mols = []
+    valid_indices = []
+    current_idx = 0
     
     # 读取 actives
     if actives_path and os.path.exists(actives_path):
         print(f"  读取 actives: {actives_path}", flush=True)
         actives = read_sdf_molecules(actives_path)
         print(f"    找到 {len(actives)} 个 active 分子", flush=True)
-        all_mols.extend(actives)
-        labels.extend([1] * len(actives))
+        for mol in actives:
+            if mol is not None:
+                all_mols.append(mol)
+                labels.append(1)
+                valid_indices.append(current_idx)
+            current_idx += 1
     
     # 读取 decoys
     if decoys_path and os.path.exists(decoys_path):
         print(f"  读取 decoys: {decoys_path}", flush=True)
         decoys = read_sdf_molecules(decoys_path)
         print(f"    找到 {len(decoys)} 个 decoy 分子", flush=True)
-        all_mols.extend(decoys)
-        labels.extend([0] * len(decoys))
+        for mol in decoys:
+            if mol is not None:
+                all_mols.append(mol)
+                labels.append(0)
+                valid_indices.append(current_idx)
+            current_idx += 1
     
     # 写入合并后的 SDF 文件
     if all_mols:
@@ -107,10 +118,12 @@ def prepare_ligand_file(actives_path, decoys_path, output_path):
             writer.write(mol)
         writer.close()
         print(f"  合并后的配体文件: {output_path} (共 {len(all_mols)} 个分子)", flush=True)
+        if len(all_mols) < current_idx:
+            print(f"  警告: {current_idx - len(all_mols)} 个分子无效，已跳过", flush=True)
     else:
         print(f"  警告: 未找到任何配体分子", flush=True)
     
-    return labels
+    return labels, valid_indices
 
 
 def scoring(prot, lig, modpath, cutoff=10.0, dist_threshold=5.0, 
@@ -295,7 +308,7 @@ def main():
             
             # 合并 actives 和 decoys
             combined_lig_path = output_dir / f"{target_name}_ligands.sdf"
-            labels = prepare_ligand_file(actives_path, decoys_path, str(combined_lig_path))
+            labels, valid_indices = prepare_ligand_file(actives_path, decoys_path, str(combined_lig_path))
             
             if not os.path.exists(combined_lig_path):
                 print(f"错误: 无法创建配体文件", flush=True)
