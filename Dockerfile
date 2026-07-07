@@ -7,6 +7,10 @@ ENV DGL_HOME=/tmp/.dgl
 ENV MPLCONFIGDIR=/tmp/matplotlib
 
 # 安装 Python 和系统依赖（保持这层稳定）
+# libxrender1 / libxext6: openbabel-wheel 的 viewmolformat 等 plugin 在加载时
+# 链接 libXrender.so.1, libXext.so.6；缺失会让 OBConversion 整个 plugin 注册失败，
+# SetInAndOutFormats("sdf","pdb") 返回 False，下游 RTMScore extract_pocket 静默
+# 写空 PDB → "The graph of pocket cannot be generated"。
 RUN apt-get update && apt-get install -y \
     python3.8 \
     python3-pip \
@@ -14,6 +18,8 @@ RUN apt-get update && apt-get install -y \
     wget \
     build-essential \
     g++ \
+    libxrender1 \
+    libxext6 \
  && rm -rf /var/lib/apt/lists/*
 
 # 升级 pip

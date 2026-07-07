@@ -328,11 +328,26 @@ def main():
             )
             
             # 保存结果
+            # 按 mol_ids 末尾 "-{i}" 把 labels 重新对齐到 scores —— VSDataset 在内部
+            # 会因 MolFromMolBlock / mol_to_graph 失败再次丢分子，导致 scores 比
+            # labels 短；i 是分子在合并 SDF 中的位置（labels 与之同序），所以可
+            # 以直接 labels[i] 取齐。
+            aligned_labels = []
+            for mid in mol_ids:
+                try:
+                    i = int(str(mid).rsplit('-', 1)[1])
+                    aligned_labels.append(labels[i])
+                except (ValueError, IndexError) as e:
+                    print(f"  警告: 无法从 mol_id 解析索引: {mid} ({e})", flush=True)
+                    aligned_labels.append(-1)
+            if len(aligned_labels) != len(labels):
+                print(f"  注意: VSDataset 丢弃了 {len(labels) - len(aligned_labels)} 个分子", flush=True)
+
             result = {
                 "target": target_name,
                 "mol_ids": mol_ids,
                 "scores": scores.tolist() if isinstance(scores, np.ndarray) else scores,
-                "labels": labels
+                "labels": aligned_labels,
             }
             
             output_file = output_dir / f"{target_name}.json"
